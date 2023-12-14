@@ -1,5 +1,16 @@
 import ascon
 import json
+import hashlib
+
+def calculate_hash(file_path):
+    sha256_hash = hashlib.sha256()
+
+    with open(file_path, 'rb') as f:
+        # Read and update hash string value in blocks of 4K
+        for byte_block in iter(lambda: f.read(4096), b""):
+            sha256_hash.update(byte_block)
+
+    return sha256_hash.hexdigest()
 
 def decrypt_file(encrypted_file, output_file, key):
     with open(encrypted_file, 'rb') as f:
@@ -29,6 +40,19 @@ def load_key_from_json(filename):
 
     return key_bytes
 
+def verify_hash_from_json(filename, expected_hash):
+    with open(filename, 'r') as f:
+        hash_data = json.load(f)
+
+    hash_value = hash_data.get('hash_value', None)
+
+    if hash_value is not None and hash_value == expected_hash:
+        print("Hash verification successful.")
+        return True
+    else:
+        print("Hash verification failed.")
+        return False
+
 if __name__ == "__main__":
     # Read key from JSON file
     private_key_filename = 'private_key.json'
@@ -37,5 +61,7 @@ if __name__ == "__main__":
     # Decryption
     encrypted_file = 'encrypted_file.bin'
     decrypted_file = 'decrypted_file.txt'
+    expected_hash = calculate_hash(decrypted_file)
 
-    decrypt_file(encrypted_file, decrypted_file, key)
+    if verify_hash_from_json('hash_value.json', expected_hash):
+        decrypt_file(encrypted_file, decrypted_file, key)
