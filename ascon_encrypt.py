@@ -1,6 +1,17 @@
 import ascon
 import json
 import secrets
+import hashlib
+
+def calculate_hash(file_path):
+    sha256_hash = hashlib.sha256()
+
+    with open(file_path, 'rb') as f:
+        # Read and update hash string value in blocks of 4K
+        for byte_block in iter(lambda: f.read(4096), b""):
+            sha256_hash.update(byte_block)
+
+    return sha256_hash.hexdigest()
 
 def encrypt_file(input_file, output_file, key):
     with open(input_file, 'rb') as f:
@@ -29,6 +40,11 @@ def save_key_to_json(filename, key):
     with open(filename, 'w') as f:
         json.dump(key_data, f)
 
+def save_hash_to_json(filename, hash_value):
+    hash_data = {'hash_value': hash_value}
+    with open(filename, 'w') as f:
+        json.dump(hash_data, f)
+
 if __name__ == "__main__":
     key = generate_key()
 
@@ -38,5 +54,13 @@ if __name__ == "__main__":
     data_to_encrypt = b"Hello, World!"
     input_file = 'plaintext.txt'
     encrypted_file = 'encrypted_file.bin'
+    hash_file = 'hash_value.json'
+
+    hash_value = calculate_hash(input_file)
+
+    print(f"The SHA-256 hash value of {input_file} is: {hash_value}")
+
+    # Save the hash value to a JSON file
+    save_hash_to_json(hash_file, hash_value)
 
     encrypt_file(input_file, encrypted_file, key)
