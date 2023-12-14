@@ -1,24 +1,13 @@
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.asymmetric import ed25519
-from cryptography.hazmat.primitives import hashes
 import ascon
+import json
 import secrets
-
-def generate_keypair():
-    private_key = ed25519.Ed25519PrivateKey.generate()
-    public_key = private_key.public_key()
-    return private_key, public_key
-
-def sign_data(private_key, data):
-    signature = private_key.sign(data)
-    return signature
 
 def encrypt_file(input_file, output_file, key):
     with open(input_file, 'rb') as f:
         plaintext = f.read()
 
-    # Generate a nonce
-    nonce = secrets.token_bytes(16)  # 16 bytes for Ascon-128
+    # Generate a random nonce
+    nonce = secrets.token_bytes(16)
 
     # Optionally provide associated data
     associated_data = b"Associated Data"
@@ -30,19 +19,24 @@ def encrypt_file(input_file, output_file, key):
         f.write(nonce)
         f.write(ciphertext)
 
+def generate_key():
+    # Generate a 128-bit (16-byte) key using secrets module
+    return secrets.token_bytes(16)
+
+def save_key_to_json(filename, key):
+    key_hex = key.hex()
+    key_data = {'key': key_hex}
+    with open(filename, 'w') as f:
+        json.dump(key_data, f)
+
 if __name__ == "__main__":
-    private_key, public_key = generate_keypair()
+    key = generate_key()
+
+    # Save the key to a JSON file
+    save_key_to_json('private_key.json', key)
+
     data_to_encrypt = b"Hello, World!"
-    
-    # Sign the data
-    signature = sign_data(private_key, data_to_encrypt)
-    
-    # Encryption
-    key = b'Sixteen byte key'
-    input_file = r'C:\Users\tom\hello\demo.txt'  # Use a raw string to handle backslashes
+    input_file = 'plaintext.txt'
     encrypted_file = 'encrypted_file.bin'
-    
-    # Combine data and signature for secure storage
-    data_to_encrypt_with_signature = data_to_encrypt + signature
-    
+
     encrypt_file(input_file, encrypted_file, key)
