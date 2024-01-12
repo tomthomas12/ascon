@@ -61,7 +61,9 @@ if __name__ == "__main__":
     # Decryption
     encrypted_file = 'encrypted_file.bin'
     decrypted_file = 'decrypted_file.txt'
+    print("")
+    decrypt_file(encrypted_file, decrypted_file, key)
     expected_hash = calculate_hash(decrypted_file)
 
     if verify_hash_from_json('hash_value.json', expected_hash):
-        decrypt_file(encrypted_file, decrypted_file, key)
+        print("")
